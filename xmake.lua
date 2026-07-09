@@ -4,26 +4,7 @@ add_rules("plugin.compile_commands.autoupdate")
 
 add_repositories("levimc-repo https://github.com/LiteLDev/xmake-repo.git")
 
--- add_requires("levilamina 26.10.14", { configs = { target_type = "client" } })
-add_requires(
-    "entt v3.15.0",
-    "expected-lite v0.8.0",
-    "fmt 11.2.0",
-    "gsl v4.2.0",
-    "glm 1.0.1",
-    "leveldb 1.23",
-    "magic_enum v0.9.7",
-    "nlohmann_json v3.11.3",
-    "rapidjson v1.1.0",
-    "type_safe v0.2.4",
-    "pcg_cpp v1.0.0",
-    "pfr 2.1.1",
-    "symbolprovider v1.2.0",
-    "parallel-hashmap v1.3.12",
-    "concurrentqueue v1.0.4",
-    "stb 2025.03.14",
-    "bedrockdata v26.10.4-client.17"
-)
+add_requires("levilamina 26.20.0", { configs = { target_type = "client" } })
 
 if not has_config("vs_runtime") then
     set_runtimes("MD")
@@ -50,26 +31,21 @@ target("iInfiniteNightVision")
         "_HAS_CXX23=1",
         "LL_PLAT_C"
     )
-    -- add_packages("levilamina")
-    add_packages(
-        "entt",
-        "expected-lite",
-        "fmt",
-        "gsl",
-        "glm",
-        "leveldb",
-        "magic_enum",
-        "nlohmann_json",
-        "rapidjson",
-        "type_safe",
-        "pcg_cpp",
-        "pfr",
-        "symbolprovider",
-        "parallel-hashmap",
-        "concurrentqueue",
-        "stb",
-        "bedrockdata"
+    add_cxflags(
+        "/EHs",
+        "-Wno-microsoft-cast",
+        "-Wno-invalid-offsetof",
+        "-Wno-c++2b-extensions",
+        "-Wno-microsoft-include",
+        "-Wno-overloaded-virtual",
+        "-Wno-ignored-qualifiers",
+        "-Wno-missing-field-initializers",
+        "-Wno-potentially-evaluated-expression",
+        "-Wno-pragma-system-header-outside-header",
+        { tools = { "clang_cl" } }
     )
+    set_toolchains("clang-cl")
+    add_packages("levilamina")
     set_exceptions("none")
     set_kind("shared")
     set_languages("cxx20")
@@ -78,11 +54,6 @@ target("iInfiniteNightVision")
     add_files("src/**.cpp")
     add_includedirs("src")
     add_headerfiles("src/**.h")
-
-    -- sdk
-    add_includedirs("sdk/include")
-    add_headerfiles("sdk/include/**.h")
-    add_links("sdk/lib/LeviLamina.lib")
 
     before_link(function(target)
         import("lib.detect.find_file")

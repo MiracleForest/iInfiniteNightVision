@@ -5,6 +5,7 @@
 #include <mc/client/renderer/ptexture/BaseLightTextureImageBuilder.h>
 #include <mc/deps/core/utility/ServiceLocator.h>
 #include <mc/deps/minecraft_renderer/framebuilder/BlitFlipbookTextureDescription.h>
+#include <mc/deps/minecraft_renderer/framebuilder/EditorHighlightConfiguration.h>
 #include <mc/deps/minecraft_renderer/framebuilder/FadeToBlackDescription.h>
 #include <mc/deps/minecraft_renderer/framebuilder/FrameBuilder.h>
 #include <mc/deps/minecraft_renderer/framebuilder/FullscreenEffectDescription.h>
@@ -12,7 +13,6 @@
 #include <mc/deps/minecraft_renderer/framebuilder/RenderFlameBillboardDescription.h>
 #include <mc/deps/minecraft_renderer/framebuilder/RenderParticleDescription.h>
 #include <mc/deps/minecraft_renderer/framebuilder/RenderShadowDescription.h>
-#include <mc/deps/minecraft_renderer/framebuilder/gamecomponents/mfc/EditorHighlightConfiguration.h>
 
 namespace mce::framebuilder {
 struct RenderPlayerVisionDescription {
@@ -34,12 +34,12 @@ iInfiniteNightVision& iInfiniteNightVision::getInstance() {
 bool iInfiniteNightVision::load() { return true; }
 
 bool iInfiniteNightVision::enable() {
-    ll::memory::HookRegistrar<SimpleHook, DeferredHook>::hook();
+    ll::memory::HookRegistrar<SimpleHook, DeferredHook, UnderwaterHook>::hook();
     return true;
 }
 
 bool iInfiniteNightVision::disable() {
-    ll::memory::HookRegistrar<SimpleHook, DeferredHook>::unhook();
+    ll::memory::HookRegistrar<SimpleHook, DeferredHook, UnderwaterHook>::unhook();
     return true;
 }
 
@@ -47,18 +47,21 @@ bool iInfiniteNightVision::unload() { return true; }
 
 LL_REGISTER_MOD(iInfiniteNightVision, iInfiniteNightVision::getInstance());
 
-LL_STATIC_HOOK(
+LL_TYPE_INSTANCE_HOOK(
     iInfiniteNightVision::SimpleHook,
     HookPriority::Normal,
-    ll::memory::unchecked(&BaseLightTextureImageBuilder::_updateDarknessLightData),
-    void,
-    BaseLightData&  baseLightData,
-    Player const&   player,
-    IOptions const& options
+    BaseLightTextureImageBuilder,
+    &BaseLightTextureImageBuilder::refreshData,
+    bool,
+    IClientInstance* client,
+    BaseLightData&   lightData
 ) {
-    ll::memory::dAccess<bool>(&baseLightData, 36)  = true;
-    ll::memory::dAccess<float>(&baseLightData, 40) = 1.0f;
-    origin(baseLightData, player, options);
+    auto result                                = origin(client, lightData);
+    ll::memory::dAccess<bool>(&lightData, 36)  = true;
+    ll::memory::dAccess<float>(&lightData, 40) = 1.0f;
+    ll::memory::dAccess<bool>(&lightData, 44)  = true;
+    ll::memory::dAccess<float>(&lightData, 48) = 1.0f;
+    return result;
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -71,11 +74,11 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     using namespace ll::memory_literals;
     // clang-format off
-    auto frameBuilderRef = reinterpret_cast<ServiceReference<mce::framebuilder::FrameBuilder> (*)()>(
-        "48 89 5C 24 10 57 48 83 EC 20 48 8B D9 48 8D 3D 14 BB 2F 0A"_sig.resolve()
-    )();
-    if (!frameBuilderRef.mService.mControlBlock->mIsValid) return;
-    if (!ll::memory::virtualCall<bool>(frameBuilderRef.mService.mPointer, 1)) return;
+    auto frameBuilderRef = *reinterpret_cast<Bedrock::NonOwnerPointer<mce::framebuilder::FrameBuilder>*>(
+        reinterpret_cast<uintptr_t>(ll::sys_utils::getImageRange().data()) + 0xDCE1DD8
+    );
+    if (!frameBuilderRef.mControlBlock->mIsValid) return;
+    if (!ll::memory::virtualCall<bool>(frameBuilderRef.mPointer, 1)) return;
     // clang-format on
 
     mce::framebuilder::RenderPlayerVisionDescription desc{
@@ -97,11 +100,26 @@ LL_TYPE_INSTANCE_HOOK(
             std::reference_wrapper<mce::framebuilder::FadeToBlackDescription const>,
             std::reference_wrapper<mce::framebuilder::RenderCameraAimAssistHighlightDescription const>,
             std::reference_wrapper<mce::framebuilder::FullscreenEffectDescription const>,
-            std::reference_wrapper<MFC::EditorHighlightConfiguration const>>>(
-        frameBuilderRef.mService.mPointer,
+            std::reference_wrapper<mce::framebuilder::gamecomponents::EditorHighlightConfiguration const>>>(
+        frameBuilderRef.mPointer,
         99,
         desc
     );
+}
+
+LL_TYPE_INSTANCE_HOOK(
+    iInfiniteNightVision::UnderwaterHook,
+    HookPriority::Normal,
+    LevelRendererCamera,
+    &LevelRendererCamera::determineUnderwaterStatus,
+    void,
+    BlockSource& region
+) {
+    origin(region);
+    mCameraUnderPowderSnow = false;
+    mCameraUnderWater      = false;
+    mCameraUnderLava       = false;
+    mCameraUnderLiquid     = false;
 }
 
 } // namespace infinite_night_vision

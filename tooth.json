@@ -2,7 +2,7 @@
   "format_version": 3,
   "format_uuid": "289f771f-2c9a-4d73-9f3f-8492495a924d",
   "tooth": "github.com/MiracleForest/iInfiniteNightVision",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "info": {
     "name": "iInfiniteNightVision",
     "description": "A Minecraft infinite night vision mod for the LeviLamina mod loader.",
@@ -21,7 +21,7 @@
       "label": "client",
       "platform": "win-x64",
       "dependencies": {
-        "github.com/LiteLDev/LeviLamina": "26.10.*"
+        "github.com/LiteLDev/LeviLamina": "26.20.*"
       },
       "assets": [
         {
