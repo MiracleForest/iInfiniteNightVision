@@ -2,7 +2,9 @@
 #include <ll/api/memory/Hook.h>
 #include <ll/api/mod/RegisterHelper.h>
 #include <mc/client/renderer/game/LevelRendererCamera.h>
+#include <mc/client/renderer/ptexture/BaseLightData.h>
 #include <mc/client/renderer/ptexture/BaseLightTextureImageBuilder.h>
+#include <mc/client/world/level/dimension/NetherLightTextureImageBuilder.h>
 #include <mc/deps/core/utility/ServiceLocator.h>
 #include <mc/deps/minecraft_renderer/framebuilder/BlitFlipbookTextureDescription.h>
 #include <mc/deps/minecraft_renderer/framebuilder/EditorHighlightConfiguration.h>
@@ -12,17 +14,8 @@
 #include <mc/deps/minecraft_renderer/framebuilder/RenderCameraAimAssistHighlightDescription.h>
 #include <mc/deps/minecraft_renderer/framebuilder/RenderFlameBillboardDescription.h>
 #include <mc/deps/minecraft_renderer/framebuilder/RenderParticleDescription.h>
+#include <mc/deps/minecraft_renderer/framebuilder/RenderPlayerVisionDescription.h>
 #include <mc/deps/minecraft_renderer/framebuilder/RenderShadowDescription.h>
-
-namespace mce::framebuilder {
-struct RenderPlayerVisionDescription {
-    bool  mNightVisionEnabled;
-    float mNightVisionScale;
-    float mMobEffectFogLevel;
-    float mSkyAmbientContribution;
-    float mDarknessScale;
-};
-} // namespace mce::framebuilder
 
 namespace infinite_night_vision {
 
@@ -34,12 +27,12 @@ iInfiniteNightVision& iInfiniteNightVision::getInstance() {
 bool iInfiniteNightVision::load() { return true; }
 
 bool iInfiniteNightVision::enable() {
-    ll::memory::HookRegistrar<SimpleHook, DeferredHook, UnderwaterHook>::hook();
+    ll::memory::HookRegistrar<SimpleHook1, SimpleHook2, DeferredHook, UnderwaterHook>::hook();
     return true;
 }
 
 bool iInfiniteNightVision::disable() {
-    ll::memory::HookRegistrar<SimpleHook, DeferredHook, UnderwaterHook>::unhook();
+    ll::memory::HookRegistrar<SimpleHook1, SimpleHook2, DeferredHook, UnderwaterHook>::unhook();
     return true;
 }
 
@@ -47,38 +40,59 @@ bool iInfiniteNightVision::unload() { return true; }
 
 LL_REGISTER_MOD(iInfiniteNightVision, iInfiniteNightVision::getInstance());
 
+using namespace ll::memory_literals;
+
 LL_TYPE_INSTANCE_HOOK(
-    iInfiniteNightVision::SimpleHook,
+    iInfiniteNightVision::SimpleHook1,
     HookPriority::Normal,
     BaseLightTextureImageBuilder,
-    &BaseLightTextureImageBuilder::refreshData,
-    bool,
-    IClientInstance* client,
-    BaseLightData&   lightData
+    &BaseLightTextureImageBuilder::$createBaseLightTextureData,
+    std::unique_ptr<BaseLightData>,
+    IClientInstance*     client,
+    BaseLightData const& currentData
 ) {
-    auto result                                = origin(client, lightData);
-    ll::memory::dAccess<bool>(&lightData, 36)  = true;
-    ll::memory::dAccess<float>(&lightData, 40) = 1.0f;
-    ll::memory::dAccess<bool>(&lightData, 44)  = true;
-    ll::memory::dAccess<float>(&lightData, 48) = 1.0f;
+    auto result                = origin(client, currentData);
+    result->mNightvisionActive = true;
+    result->mNightvisionScale  = 1.0f;
+    result->mUnderwaterVision  = true;
+    result->mUnderwaterScale   = 1.0f;
     return result;
 }
 
 LL_TYPE_INSTANCE_HOOK(
+    iInfiniteNightVision::SimpleHook2,
+    HookPriority::Normal,
+    NetherLightTextureImageBuilder,
+    // "NetherLightTextureImageBuilder::createBaseLightTextureData"_sym,
+    "55 41 56 56 57 53 48 83 EC ?? 48 8D 6C 24 ?? 0F 29 75 ?? 48 C7 45 ?? ?? ?? ?? ?? 4D 89 CE 4C 89 C7 48 89 D6"_sig,
+    std::unique_ptr<BaseLightData>,
+    IClientInstance*     client,
+    BaseLightData const& currentData
+) {
+    auto result                = origin(client, currentData);
+    result->mNightvisionActive = true;
+    result->mNightvisionScale  = 1.0f;
+    result->mUnderwaterVision  = true;
+    result->mUnderwaterScale   = 1.0f;
+    return result;
+}
+
+LL_INSTANCE_HOOK(
     iInfiniteNightVision::DeferredHook,
     HookPriority::Normal,
-    LevelRendererCamera,
-    &LevelRendererCamera::renderPlayerVision,
-    void,
-    ScreenContext&
+    // "std::_Func_impl_no_alloc<`lambda at D:\\a\\_work\\1\\s\\handheld\\src-client\\common\\client\\renderer\\game\\LevelRendererCamera.cpp:4070:33',void,CommandListTaskContext &>::_Do_call"_sym,
+    "55 41 57 41 56 41 55 41 54 56 57 53 48 81 EC ?? ?? ?? ?? 48 8D AC 24 ?? ?? ?? ?? 44 0F 29 95 ?? ?? ?? ?? 44 0F 29 8D ?? ?? ?? ?? 44 0F 29 85 ?? ?? ?? ?? 0F 29 BD ?? ?? ?? ?? 0F 29 B5 ?? ?? ?? ?? 48 C7 85 ?? ?? ?? ?? ?? ?? ?? ?? 4C 8B 69"_sig,
+    void
 ) {
-    using namespace ll::memory_literals;
     // clang-format off
-    auto frameBuilderRef = *reinterpret_cast<Bedrock::NonOwnerPointer<mce::framebuilder::FrameBuilder>*>(
-        reinterpret_cast<uintptr_t>(ll::sys_utils::getImageRange().data()) + 0xDCE1DD8
+    // auto frameBuilderRef = reinterpret_cast<Bedrock::NonOwnerPointer<mce::framebuilder::FrameBuilder>& (*)()>(
+        // "??__E?mService@?$ServiceLocator@VFrameBuilder@framebuilder@mce@@@@0V?$NonOwnerPointer@VFrameBuilder@framebuilder@mce@@@Bedrock@@A@@YAXXZ"_sym.resolve()
+    // )();
+    auto& frameBuilderRef = *reinterpret_cast<Bedrock::NonOwnerPointer<mce::framebuilder::FrameBuilder>*>(
+        reinterpret_cast<uintptr_t>(ll::sys_utils::getImageRange().data()) + 0x10c6a1c0
     );
-    if (!frameBuilderRef.mControlBlock->mIsValid) return;
-    if (!ll::memory::virtualCall<bool>(frameBuilderRef.mPointer, 1)) return;
+    if (!frameBuilderRef.mControlBlock || !frameBuilderRef.mControlBlock->mIsValid) return;
+    if (!frameBuilderRef.mPointer->enabled()) return;
     // clang-format on
 
     mce::framebuilder::RenderPlayerVisionDescription desc{
@@ -89,33 +103,19 @@ LL_TYPE_INSTANCE_HOOK(
         .mDarknessScale          = 0.0f
     };
 
-    ll::memory::virtualCall<
-        void,
-        std::variant<
-            std::reference_wrapper<mce::framebuilder::RenderFlameBillboardDescription const>,
-            std::reference_wrapper<mce::framebuilder::BlitFlipbookTextureDescription const>,
-            std::reference_wrapper<mce::framebuilder::RenderParticleDescription const>,
-            std::reference_wrapper<mce::framebuilder::RenderPlayerVisionDescription const>,
-            std::reference_wrapper<mce::framebuilder::RenderShadowDescription const>,
-            std::reference_wrapper<mce::framebuilder::FadeToBlackDescription const>,
-            std::reference_wrapper<mce::framebuilder::RenderCameraAimAssistHighlightDescription const>,
-            std::reference_wrapper<mce::framebuilder::FullscreenEffectDescription const>,
-            std::reference_wrapper<mce::framebuilder::gamecomponents::EditorHighlightConfiguration const>>>(
-        frameBuilderRef.mPointer,
-        99,
-        desc
-    );
+    frameBuilderRef.mPointer->_insert(desc);
 }
 
 LL_TYPE_INSTANCE_HOOK(
     iInfiniteNightVision::UnderwaterHook,
     HookPriority::Normal,
     LevelRendererCamera,
-    &LevelRendererCamera::determineUnderwaterStatus,
+    &LevelRendererCamera::$preRenderUpdate,
     void,
-    BlockSource& region
+    ScreenContext&                        screenContext,
+    LevelRenderPreRenderUpdateParameters& levelRenderPreRenderUpdateParameters
 ) {
-    origin(region);
+    origin(screenContext, levelRenderPreRenderUpdateParameters);
     mCameraUnderPowderSnow = false;
     mCameraUnderWater      = false;
     mCameraUnderLava       = false;

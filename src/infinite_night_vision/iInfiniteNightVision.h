@@ -5,7 +5,8 @@ namespace infinite_night_vision {
 
 class iInfiniteNightVision {
 public:
-    struct SimpleHook;
+    struct SimpleHook1;
+    struct SimpleHook2;
     struct DeferredHook;
     struct UnderwaterHook;
 
