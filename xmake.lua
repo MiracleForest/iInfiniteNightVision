@@ -12,7 +12,6 @@ end
 
 target("iInfiniteNightVision")
     add_cxflags(
-        "/EHa",
         "/utf-8",
         "/W4",
         "/w44265",
