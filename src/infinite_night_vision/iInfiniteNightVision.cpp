@@ -63,8 +63,7 @@ LL_TYPE_INSTANCE_HOOK(
     iInfiniteNightVision::SimpleHook2,
     HookPriority::Normal,
     NetherLightTextureImageBuilder,
-    // "NetherLightTextureImageBuilder::createBaseLightTextureData"_sym,
-    "55 41 56 56 57 53 48 83 EC ?? 48 8D 6C 24 ?? 0F 29 75 ?? 48 C7 45 ?? ?? ?? ?? ?? 4D 89 CE 4C 89 C7 48 89 D6"_sig,
+    &NetherLightTextureImageBuilder::$createBaseLightTextureData,
     std::unique_ptr<BaseLightData>,
     IClientInstance*     client,
     BaseLightData const& currentData
@@ -80,16 +79,16 @@ LL_TYPE_INSTANCE_HOOK(
 LL_INSTANCE_HOOK(
     iInfiniteNightVision::DeferredHook,
     HookPriority::Normal,
-    // "std::_Func_impl_no_alloc<`lambda at D:\\a\\_work\\1\\s\\handheld\\src-client\\common\\client\\renderer\\game\\LevelRendererCamera.cpp:4070:33',void,CommandListTaskContext &>::_Do_call"_sym,
-    "55 41 57 41 56 41 55 41 54 56 57 53 48 81 EC ?? ?? ?? ?? 48 8D AC 24 ?? ?? ?? ?? 44 0F 29 95 ?? ?? ?? ?? 44 0F 29 8D ?? ?? ?? ?? 44 0F 29 85 ?? ?? ?? ?? 0F 29 BD ?? ?? ?? ?? 0F 29 B5 ?? ?? ?? ?? 48 C7 85 ?? ?? ?? ?? ?? ?? ?? ?? 4C 8B 69"_sig,
+    // "std::_Func_impl_no_alloc<`lambda at D:\\a\\_work\\1\\s\\handheld\\src-client\\common\\client\\renderer\\game\\LevelRendererCamera.cpp:4126:33',void,CommandListTaskContext &>::_Do_call"_sym,
+    "55 41 57 41 56 41 55 41 54 56 57 53 48 81 EC ?? ?? ?? ?? 48 8D AC 24 ?? ?? ?? ?? 44 0F 29 95 ?? ?? ?? ?? 44 0F 29 8D ?? ?? ?? ?? 44 0F 29 85 ?? ?? ?? ?? 0F 29 BD ?? ?? ?? ?? 0F 29 B5 ?? ?? ?? ?? 48 C7 85 ?? ?? ?? ?? ?? ?? ?? ?? 4C 8B 69 ?? 48 8D 1D"_sig,
     void
 ) {
     // clang-format off
     // auto frameBuilderRef = reinterpret_cast<Bedrock::NonOwnerPointer<mce::framebuilder::FrameBuilder>& (*)()>(
-        // "??__E?mService@?$ServiceLocator@VFrameBuilder@framebuilder@mce@@@@0V?$NonOwnerPointer@VFrameBuilder@framebuilder@mce@@@Bedrock@@A@@YAXXZ"_sym.resolve()
+    //     "?mService@?$ServiceLocator@VFrameBuilder@framebuilder@mce@@@@SAAEAV?$NonOwnerPointer@VFrameBuilder@framebuilder@mce@@@Bedrock@@XZ"_sym.resolve()
     // )();
     auto& frameBuilderRef = *reinterpret_cast<Bedrock::NonOwnerPointer<mce::framebuilder::FrameBuilder>*>(
-        reinterpret_cast<uintptr_t>(ll::sys_utils::getImageRange().data()) + 0x10c6a1c0
+        reinterpret_cast<uintptr_t>(ll::sys_utils::getImageRange().data()) + 0x11A6AD58
     );
     if (!frameBuilderRef.mControlBlock || !frameBuilderRef.mControlBlock->mIsValid) return;
     if (!frameBuilderRef.mPointer->enabled()) return;
