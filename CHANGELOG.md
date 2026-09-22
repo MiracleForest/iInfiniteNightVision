@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-02-22
+
+- Adapted the mod for LeviLamina 26.51.x. @zimuya4153
+
 ## [1.3.0] - 2026-09-09
 
 ### Changed
@@ -35,7 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release @zimuya4153
 
-[Unreleased]: https://github.com/MiracleForest/iInfiniteNightVision/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/MiracleForest/iInfiniteNightVision/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/MiracleForest/iInfiniteNightVision/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/MiracleForest/iInfiniteNightVision/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/MiracleForest/iInfiniteNightVision/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/MiracleForest/iInfiniteNightVision/compare/v1.0.0...v1.1.0

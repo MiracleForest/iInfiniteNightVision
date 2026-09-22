@@ -4,7 +4,7 @@ add_rules("plugin.compile_commands.autoupdate")
 
 add_repositories("levimc-repo https://github.com/LiteLDev/xmake-repo.git")
 
-add_requires("levilamina 26.40.0", { configs = { target_type = "client" } })
+add_requires("levilamina 26.51.5", { configs = { target_type = "client" } })
 
 if not has_config("vs_runtime") then
     set_runtimes("MD")
